@@ -1,35 +1,41 @@
 import { useState } from 'react'
-import { register } from '../api/auth'
-import './RegisterForm.css'
+import { login } from '../api/auth'
+import { useAuth } from '../contexts/AuthContext'
+import './LoginPage.css'
 
-export default function RegisterForm() {
+export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
+  
+  const { login: setAuth } = useAuth()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    // TODO: Add your login logic here
     setError('')
     setSuccess(false)
     setLoading(true)
 
     try {
-      await register(email, password)
-      setSuccess(true)
-      setEmail('')
-      setPassword('')
+        await login(email, password)
+        setSuccess(true)
+        setEmail('')
+        setPassword('')
+        
     } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
+        setError(err.message)
+    }
+    finally {
+        setLoading(false)
     }
   }
 
   return (
-    <div className="register-form">
-      <h2>Register</h2>
+    <div className="login-page">
+      <h2>Login</h2>
       {success && <p className="success-message">Registration successful!</p>}
       {error && <p className="error-message">{error}</p>}
       <form onSubmit={handleSubmit}>
@@ -50,12 +56,11 @@ export default function RegisterForm() {
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            minLength={8}
             required
           />
         </div>
         <button type="submit" disabled={loading}>
-          {loading ? 'Registering...' : 'Register'}
+          {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>
     </div>
