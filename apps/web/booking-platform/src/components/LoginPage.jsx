@@ -1,30 +1,33 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { login } from '../api/auth'
 import { useAuth } from '../contexts/AuthContext'
 import './LoginPage.css'
+import { useNavigate } from 'react-router-dom'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
   
-  const { login: setAuth } = useAuth()
+  const { login: setAuth, isAuthenticated, loading: authLoading } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate('/dashboard')
+    }
+  }, [authLoading, isAuthenticated, navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    // TODO: Add your login logic here
     setError('')
-    setSuccess(false)
     setLoading(true)
 
     try {
-        await login(email, password)
-        setSuccess(true)
-        setEmail('')
-        setPassword('')
-        
+      const data = await login(email, password)
+      setAuth(data.user)
+      navigate('/dashboard')
     } catch (err) {
         setError(err.message)
     }
@@ -33,10 +36,13 @@ export default function LoginPage() {
     }
   }
 
+  const goSignup = async () => {
+    navigate('/register')
+  }
+
   return (
     <div className="login-page">
       <h2>Login</h2>
-      {success && <p className="success-message">Registration successful!</p>}
       {error && <p className="error-message">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div className="form-group">
@@ -61,6 +67,9 @@ export default function LoginPage() {
         </div>
         <button type="submit" disabled={loading}>
           {loading ? 'Logging in...' : 'Login'}
+        </button>
+        <button onClick={goSignup}>
+          signup
         </button>
       </form>
     </div>

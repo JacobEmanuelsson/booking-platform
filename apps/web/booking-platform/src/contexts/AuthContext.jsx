@@ -1,44 +1,41 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { getStoredToken, getStoredUser, logout as apiLogout } from '../api/auth';
+import { logout as apiLogout, getCurrentUser, getStoredUser, refreshAccessToken } from '../api/auth';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(getStoredUser);
-  const [token, setToken] = useState(getStoredToken);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = getStoredToken();
-    const storedUser = getStoredUser();
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(storedUser);
-    }
-    setLoading(false);
+    const initAuth = async () => {
+      const validUser = await getCurrentUser();
+      if (validUser) {
+        setUser(validUser);
+      }
+      setLoading(false);
+    };
+
+    initAuth();
   }, []);
 
-  const login = (userData, authToken) => {
-    localStorage.setItem('token', authToken);
+  const login = (userData) => {
     localStorage.setItem('user', JSON.stringify(userData));
-    setToken(authToken);
     setUser(userData);
   };
 
   const logout = async () => {
     await apiLogout();
-    setToken(null);
     setUser(null);
   };
 
   const value = {
     user,
-    token,
     loading,
     login,
     logout,
-    isAuthenticated: !!token,
+    isAuthenticated: !!user,
+    refreshAccessToken,
   };
 
   return (
